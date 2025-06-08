@@ -1,0 +1,164 @@
+/* General Layout */
+.container {
+  padding: 20px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+h2 {
+  margin-bottom: 20px;
+  color: #333;
+}
+
+/* Controls */
+.controls {
+  margin-bottom: 20px;
+}
+
+.controls label,
+.controls input,
+.controls select,
+.controls button {
+  margin-right: 10px;
+  padding: 6px 10px;
+  font-size: 14px;
+}
+
+.controls button {
+  background-color: #007acc;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.controls button:hover {
+  background-color: #005fa3;
+}
+
+/* Chart Bars / Arrays */
+.array-display {
+  display: flex;
+  align-items: flex-end;
+  height: 150px;
+  gap: 5px;
+  border: 1px solid #ccc;
+  padding: 10px;
+  margin-bottom: 15px;
+  overflow-x: auto;
+}
+
+.array-bar {
+  width: 30px;
+  text-align: center;
+  border-radius: 4px;
+  color: white;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 14px;
+}
+
+.bar-comparing {
+  background-color: orange;
+}
+
+.bar-swapped {
+  background-color: red;
+}
+
+.bar-default {
+  background-color: teal;
+}
+
+/* Searching Array */
+.array-box {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+  margin-top: 20px;
+}
+
+.array-item {
+  width: 30px;
+  height: 30px;
+  text-align: center;
+  font-weight: bold;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 4px;
+  color: white;
+}
+
+/* Colors for search steps */
+.color-in-range {
+  background-color: #6fcf97;
+}
+
+.color-mid {
+  background-color: orange;
+}
+
+.color-default {
+  background-color: teal;
+}
+
+.color-outside {
+  background-color: #ddd;
+}
+
+/* Gantt Chart */
+.gantt-chart {
+  display: flex;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+
+.gantt-block {
+  border: 1px solid black;
+  background-color: #6fa8dc;
+  color: white;
+  font-weight: bold;
+  text-align: center;
+  padding: 10px 5px;
+  margin-right: 2px;
+  position: relative;
+  margin-bottom: 5px;
+}
+
+.gantt-time {
+  position: absolute;
+  top: 100%;
+  font-size: 12px;
+}
+
+.gantt-time.start {
+  left: 0;
+}
+
+.gantt-time.end {
+  right: 0;
+}
+
+/* Table */
+.table {
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+.table th,
+.table td {
+  border: 1px solid #ccc;
+  padding: 5px 10px;
+  text-align: center;
+}
+
+/* Metrics */
+.metrics {
+  margin-top: 20px;
+}
+
+.metrics p {
+  margin: 4px 0;
+}
