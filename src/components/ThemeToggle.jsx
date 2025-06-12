@@ -1,4 +1,3 @@
-// src/components/ThemeToggle.js
 import React, { useEffect, useState } from 'react';
 
 export default function ThemeToggle() {
@@ -7,8 +6,12 @@ export default function ThemeToggle() {
   });
 
   useEffect(() => {
-    document.body.style.backgroundColor = dark ? '#121212' : '#ffffff';
-    document.body.style.color = dark ? '#ffffff' : '#000000';
+    const className = 'dark-mode';
+    if (dark) {
+      document.body.classList.add(className);
+    } else {
+      document.body.classList.remove(className);
+    }
     localStorage.setItem('theme', dark ? 'dark' : 'light');
   }, [dark]);
 
@@ -21,7 +24,8 @@ export default function ThemeToggle() {
         padding: '6px 12px',
         border: 'none',
         borderRadius: 5,
-        cursor: 'pointer'
+        cursor: 'pointer',
+        marginBottom: '10px'
       }}
     >
       {dark ? 'Light Mode' : 'Dark Mode'}

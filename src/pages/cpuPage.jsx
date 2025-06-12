@@ -1,8 +1,15 @@
 import React, { useState } from 'react';
-import { fcfs, sjf, roundRobin, priorityScheduling } from '../algorithms/cpuScheduling';
+import {
+  fcfs,
+  sjf,
+  srtf,
+  roundRobin,
+  priorityScheduling,
+  priorityPreemptive
+} from '../algorithms/cpuScheduling';
 import Chart from '../components/Chart';
 
-export default function cpuPage() {
+export default function CpuPage() {
   const [processes, setProcesses] = useState([
     { pid: 'P1', arrival: 0, burst: 4, priority: 2 },
     { pid: 'P2', arrival: 2, burst: 3, priority: 1 },
@@ -18,7 +25,7 @@ export default function cpuPage() {
 
   const addProcess = () => {
     const { pid, arrival, burst, priority } = newProcess;
-    if (!pid || arrival === '' || burst === '' || (selectedAlgo === 'priority' && priority === '')) return;
+    if (!pid || arrival === '' || burst === '' || priority === '') return;
 
     setProcesses([...processes, {
       pid,
@@ -32,11 +39,28 @@ export default function cpuPage() {
 
   const runScheduling = () => {
     let schedule;
-    if (selectedAlgo === 'fcfs') schedule = fcfs(processes);
-    else if (selectedAlgo === 'sjf') schedule = sjf(processes);
-    else if (selectedAlgo === 'rr') schedule = roundRobin(processes, quantum);
-    else if (selectedAlgo === 'priority') schedule = priorityScheduling(processes);
-    else schedule = [];
+    switch (selectedAlgo) {
+      case 'fcfs':
+        schedule = fcfs(processes);
+        break;
+      case 'sjf':
+        schedule = sjf(processes);
+        break;
+      case 'srtf':
+        schedule = srtf(processes);
+        break;
+      case 'rr':
+        schedule = roundRobin(processes, quantum);
+        break;
+      case 'priority':
+        schedule = priorityScheduling(processes);
+        break;
+      case 'priorityPreemptive':
+        schedule = priorityPreemptive(processes);
+        break;
+      default:
+        schedule = [];
+    }
 
     setGantt(schedule);
 
@@ -92,14 +116,12 @@ export default function cpuPage() {
           value={newProcess.burst}
           onChange={(e) => setNewProcess({ ...newProcess, burst: e.target.value })}
         />
-        {selectedAlgo === 'priority' && (
-          <input
-            type="number"
-            placeholder="Priority"
-            value={newProcess.priority}
-            onChange={(e) => setNewProcess({ ...newProcess, priority: e.target.value })}
-          />
-        )}
+        <input
+          type="number"
+          placeholder="Priority"
+          value={newProcess.priority}
+          onChange={(e) => setNewProcess({ ...newProcess, priority: e.target.value })}
+        />
         <button onClick={addProcess} style={{ marginLeft: 10 }}>Add Process</button>
         <button onClick={clearProcesses} style={{ marginLeft: 10, color: 'red' }}>Clear All</button>
       </div>
@@ -134,8 +156,10 @@ export default function cpuPage() {
           <select value={selectedAlgo} onChange={e => setSelectedAlgo(e.target.value)}>
             <option value="fcfs">First-Come, First-Served (FCFS)</option>
             <option value="sjf">Shortest Job First (SJF)</option>
+            <option value="srtf">Shortest Remaining Time First (SRTF)</option>
             <option value="rr">Round Robin (RR)</option>
-            <option value="priority">Priority Scheduling</option>
+            <option value="priority">Priority Scheduling (Non-preemptive)</option>
+            <option value="priorityPreemptive">Priority Scheduling (Preemptive)</option>
           </select>
         </label>
       </div>

@@ -24,7 +24,7 @@ export default function SearchingPage() {
   };
 
   const generateRandomArray = () => {
-    const arr = Array.from({ length: 15 }, () => Math.floor(Math.random() * 50) + 1).sort((a, b) => a - b);
+    const arr = Array.from({ length: Math.floor(Math.random() * 21) + 5 }, () => Math.floor(Math.random() * 50) + 1).sort((a, b) => a - b);
     setArray(arr);
     setInputText(arr.join(', '));
     setResult(null);
@@ -142,6 +142,26 @@ export default function SearchingPage() {
           );
         })}
       </div>
+
+      {currentStep && (
+        <div style={{ marginTop: 10 }}>
+          <strong>Explanation:</strong>{' '}
+          {algo === 'binary' ? (
+            <>
+              Checking middle index <strong>{currentStep.mid}</strong> (
+              value: <strong>{array[currentStep.mid]}</strong>) with left ={' '}
+              <strong>{currentStep.left}</strong> and right ={' '}
+              <strong>{currentStep.right}</strong>.
+            </>
+          ) : (
+            <>
+              Checking index <strong>{currentStep.checkingIndex}</strong> (
+              value: <strong>{array[currentStep.checkingIndex]}</strong>).
+            </>
+          )}
+        </div>
+      )}
+
 
       {result && (
         <div style={{ marginTop: 20 }}>

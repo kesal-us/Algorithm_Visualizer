@@ -23,8 +23,9 @@ export default function SortingPage() {
     setCurrentStep(0);
   }, [steps]);
 
+// Math.floor(Math.random() * (max - min + 1)) + min;
   const generateRandomArray = () => {
-    const arr = Array.from({ length: 10 }, () => Math.floor(Math.random() * 20) + 1);
+    const arr = Array.from({ length: Math.floor(Math.random() * 21) + 5 }, () => Math.floor(Math.random() * 25) + 1);
     setArray(arr);
     setUserInput('');
     setSteps([]);
@@ -115,7 +116,7 @@ export default function SortingPage() {
   const currentArray = steps.length ? steps[currentStep].array : array;
   const comparing = steps.length && steps[currentStep].type === 'compare' ? steps[currentStep].indices : [];
   const swapped = steps.length && steps[currentStep].type === 'swap' ? steps[currentStep].indices : [];
-
+  const maxVal = Math.max(...currentArray);
   return (
     <div style={{ padding: 20 }}>
       <h2>Sorting Algorithms Visualizer</h2>
@@ -166,11 +167,12 @@ export default function SortingPage() {
         {currentArray.map((val, idx) => {
           const isComparing = comparing.includes(idx);
           const isSwapped = swapped.includes(idx);
+          const height = (val / maxVal) * 140 + 10;
           return (
             <div
               key={idx}
               style={{
-                height: val * 10,
+                height: height,
                 width: 30,
                 backgroundColor: isSwapped ? 'red' : isComparing ? 'orange' : 'teal',
                 color: 'white',
@@ -187,6 +189,19 @@ export default function SortingPage() {
           );
         })}
       </div>
+
+      <div style={{ marginTop: 10 }}>
+        {steps.length > 0 && (
+          <p>
+            Step {currentStep + 1}/{steps.length}:{' '}
+            {steps[currentStep].type === 'compare' &&
+              `Comparing indices ${steps[currentStep].indices[0]} (${currentArray[steps[currentStep].indices[0]]}) and ${steps[currentStep].indices[1]} (${currentArray[steps[currentStep].indices[1]]})`}
+            {steps[currentStep].type === 'swap' &&
+              `Swapping indices ${steps[currentStep].indices[0]} and ${steps[currentStep].indices[1]}`}
+          </p>
+        )}
+      </div>
+
 
       <div style={{ marginTop: 15 }}>
         <button onClick={prevStep} disabled={currentStep === 0}>

@@ -124,3 +124,75 @@ export function priorityScheduling(processes) {
 
   return schedule;
 }
+
+// Shortest Remaining Time First (SRTF) - Preemptive SJF
+export function srtf(processes) {
+  let proc = processes.map(p => ({ ...p, remaining: p.burst }));
+  let currentTime = 0;
+  let schedule = [];
+  let completed = new Set();
+  let lastPid = null;
+
+  while (completed.size < proc.length) {
+    // Get all arrived and not completed processes
+    let available = proc.filter(p => p.arrival <= currentTime && !completed.has(p.pid));
+    if (available.length === 0) {
+      currentTime++;
+      continue;
+    }
+
+    // Choose process with shortest remaining time
+    available.sort((a, b) => a.remaining - b.remaining);
+    let currentProc = available[0];
+
+    // Record a new execution slice if a different process is scheduled
+    if (lastPid !== currentProc.pid) {
+      schedule.push({ pid: currentProc.pid, start: currentTime, end: currentTime + 1 });
+    } else {
+      schedule[schedule.length - 1].end++;
+    }
+
+    currentProc.remaining--;
+    if (currentProc.remaining === 0) completed.add(currentProc.pid);
+
+    lastPid = currentProc.pid;
+    currentTime++;
+  }
+
+  return schedule;
+}
+
+// Priority Scheduling (Preemptive)
+export function priorityPreemptive(processes) {
+  let proc = processes.map(p => ({ ...p, remaining: p.burst }));
+  let currentTime = 0;
+  let schedule = [];
+  let completed = new Set();
+  let lastPid = null;
+
+  while (completed.size < proc.length) {
+    let available = proc.filter(p => p.arrival <= currentTime && !completed.has(p.pid));
+    if (available.length === 0) {
+      currentTime++;
+      continue;
+    }
+
+    // Choose highest priority (lowest number)
+    available.sort((a, b) => a.priority - b.priority);
+    let currentProc = available[0];
+
+    if (lastPid !== currentProc.pid) {
+      schedule.push({ pid: currentProc.pid, start: currentTime, end: currentTime + 1 });
+    } else {
+      schedule[schedule.length - 1].end++;
+    }
+
+    currentProc.remaining--;
+    if (currentProc.remaining === 0) completed.add(currentProc.pid);
+
+    lastPid = currentProc.pid;
+    currentTime++;
+  }
+
+  return schedule;
+}

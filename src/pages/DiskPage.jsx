@@ -1,5 +1,13 @@
 import React, { useState } from 'react';
-import { fcfsDisk, sstfDisk, scanDisk, cscanDisk } from '../algorithms/diskScheduling';
+import {
+  fcfsDisk,
+  sstfDisk,
+  scanDisk,
+  cscanDisk,
+  lookDisk,
+  clookDisk,
+} from '../algorithms/diskScheduling';
+import '../styles/diskpage.css';
 
 export default function DiskPage() {
   const [head, setHead] = useState(50);
@@ -7,7 +15,6 @@ export default function DiskPage() {
   const [algorithm, setAlgorithm] = useState('fcfs');
   const [direction, setDirection] = useState('up');
   const [maxTrack, setMaxTrack] = useState(199);
-
   const [result, setResult] = useState(null);
 
   const parseRequests = () => {
@@ -21,92 +28,93 @@ export default function DiskPage() {
     const requests = parseRequests();
     let res;
 
-    if (algorithm === 'fcfs') {
-      res = fcfsDisk(head, requests);
-    } else if (algorithm === 'sstf') {
-      res = sstfDisk(head, requests);
-    } else if (algorithm === 'scan') {
-      res = scanDisk(head, requests, direction, maxTrack);
-    } else if (algorithm === 'cscan') {
-      res = cscanDisk(head, requests, maxTrack);
+    switch (algorithm) {
+      case 'fcfs':
+        res = fcfsDisk(head, requests);
+        break;
+      case 'sstf':
+        res = sstfDisk(head, requests);
+        break;
+      case 'scan':
+        res = scanDisk(head, requests, direction, maxTrack);
+        break;
+      case 'cscan':
+        res = cscanDisk(head, requests, maxTrack);
+        break;
+      case 'look':
+        res = lookDisk(head, requests, direction);
+        break;
+      case 'clook':
+        res = clookDisk(head, requests);
+        break;
+      default:
+        res = null;
     }
 
     setResult(res);
   };
 
   return (
-    <div style={{ padding: 20 }}>
+    <div className="disk-container">
       <h2>Disk Scheduling Algorithms</h2>
 
-      <div>
-        <label>
-          Initial Head Position:{' '}
-          <input
-            type="number"
-            value={head}
-            onChange={e => setHead(Number(e.target.value))}
-          />
-        </label>
+      <div className="input-group">
+        <label>Initial Head Position:</label>
+        <input
+          type="number"
+          value={head}
+          onChange={e => setHead(Number(e.target.value))}
+        />
       </div>
 
-      <div style={{ marginTop: 10 }}>
-        <label>
-          Requests (comma separated):{' '}
-          <input
-            type="text"
-            value={requestsStr}
-            onChange={e => setRequestsStr(e.target.value)}
-            style={{ width: 300 }}
-          />
-        </label>
+      <div className="input-group">
+        <label>Requests (comma separated):</label>
+        <input
+          type="text"
+          value={requestsStr}
+          onChange={e => setRequestsStr(e.target.value)}
+        />
       </div>
 
-      <div style={{ marginTop: 10 }}>
-        <label>
-          Select Algorithm:{' '}
-          <select
-            value={algorithm}
-            onChange={e => setAlgorithm(e.target.value)}
-          >
-            <option value="fcfs">FCFS</option>
-            <option value="sstf">SSTF</option>
-            <option value="scan">SCAN</option>
-            <option value="cscan">C-SCAN</option>
+      <div className="input-group">
+        <label>Select Algorithm:</label>
+        <select value={algorithm} onChange={e => setAlgorithm(e.target.value)}>
+          <option value="fcfs">FCFS</option>
+          <option value="sstf">SSTF</option>
+          <option value="scan">SCAN</option>
+          <option value="cscan">C-SCAN</option>
+          <option value="look">LOOK</option>
+          <option value="clook">C-LOOK</option>
+        </select>
+      </div>
+
+      {(algorithm === 'scan' || algorithm === 'look') && (
+        <div className="input-group">
+          <label>Direction:</label>
+          <select value={direction} onChange={e => setDirection(e.target.value)}>
+            <option value="up">Up</option>
+            <option value="down">Down</option>
           </select>
-        </label>
-      </div>
-
-      {(algorithm === 'scan') && (
-        <div style={{ marginTop: 10 }}>
-          <label>
-            Direction:{' '}
-            <select value={direction} onChange={e => setDirection(e.target.value)}>
-              <option value="up">Up</option>
-              <option value="down">Down</option>
-            </select>
-          </label>
         </div>
       )}
 
       {(algorithm === 'scan' || algorithm === 'cscan') && (
-        <div style={{ marginTop: 10 }}>
-          <label>
-            Max Track Number:{' '}
-            <input
-              type="number"
-              value={maxTrack}
-              onChange={e => setMaxTrack(Number(e.target.value))}
-            />
-          </label>
+        <div className="input-group">
+          <label>Max Track Number:</label>
+          <input
+            type="number"
+            value={maxTrack}
+            onChange={e => setMaxTrack(Number(e.target.value))}
+          />
         </div>
       )}
 
-      <button onClick={runAlgorithm} style={{ marginTop: 20 }}>
+      <button className="run-button" onClick={runAlgorithm}>
         Run {algorithm.toUpperCase()}
       </button>
 
       {result && (
-        <div style={{ marginTop: 20 }}>
+        <div className="result-section">
           <h3>Seek Sequence:</h3>
           <ul>
             {result.sequence.map(({ from, to, distance }, i) => (
