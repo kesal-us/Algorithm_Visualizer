@@ -7,7 +7,7 @@ import {
   priorityNonPreemptive,
   priorityPreemptive
 } from '../algorithms/cpuScheduling';
-import '../styles/CpuPage.css';
+import '../styles/cpupage.css';
 
 export default function CpuPage() {
   const [processes, setProcesses] = useState([
