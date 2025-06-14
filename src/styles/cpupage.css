@@ -1,0 +1,266 @@
+/* MAIN CONTAINER */
+.cpu-container {
+  max-width: 900px;
+  margin: 20px auto;
+  padding: 20px;
+  font-family: Arial, sans-serif;
+  background-color: #f4f4f4;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+/* HEADINGS */
+.cpu-container h1 {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.cpu-container h2 {
+  margin-top: 30px;
+  margin-bottom: 10px;
+}
+
+/* INPUT SECTION */
+.input-section {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 20px;
+  align-items: center;
+}
+
+.input-section input,
+.input-section select {
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background-color: white;
+  color: black;
+  min-width: 100px;
+}
+
+.input-section button {
+  padding: 8px 12px;
+  background-color: #007acc;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.input-section button:hover {
+  background-color: #005fa3;
+}
+
+/* PROCESS TABLE */
+.process-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 20px;
+}
+
+.process-table th,
+.process-table td {
+  border: 1px solid #ccc;
+  padding: 8px 12px;
+  text-align: center;
+}
+
+.process-table th {
+  background-color: #ddd;
+  font-weight: bold;
+}
+
+.process-table td button {
+  padding: 4px 8px;
+  background-color: #d9534f;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.process-table td button:hover {
+  background-color: #c9302c;
+}
+
+/* SETTINGS SECTION */
+.settings-section {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.settings-section select,
+.settings-section input {
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.settings-section button {
+  padding: 8px 12px;
+  background-color: #28a745;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.settings-section button:hover {
+  background-color: #218838;
+}
+
+/* GANTT CHART */
+.gantt-chart {
+  margin-top: 0px;
+  overflow-x: auto;
+  background-color: #1e1e1e; /* Match your theme */
+  padding: 10px;
+  border-radius: 8px;
+}
+
+.gantt-bar {
+  display: flex;
+  align-items: center;
+  height: 40px;
+}
+
+.gantt-column {
+  flex-shrink: 0;
+  position: relative;
+}
+
+.gantt-block {
+  background-color: #428bca;
+  color: white;
+  text-align: center;
+  font-weight: bold;
+  padding: 8px 0;
+  border-radius: 4px;
+  width: 100%;
+}
+
+.gantt-times {
+  display: flex;
+  margin-top: 4px;
+}
+
+.gantt-time {
+  font-size: 12px;
+  color: #ccc;
+  text-align: left;
+  flex-shrink: 0;
+  width: 30px; /* same as per time unit above */
+}
+
+
+/* STEPS SECTION */
+.steps-section {
+  margin-top: 30px;
+}
+
+.step-entry {
+  background-color: #fff;
+  border: 1px solid #ccc;
+  padding: 10px;
+  border-radius: 4px;
+  margin-bottom: 10px;
+}
+
+.step-controls {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.step-controls button {
+  padding: 8px 16px;
+  background-color: #ff9800;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.step-controls button:hover {
+  background-color: #f57c00;
+}
+
+.step-controls button:disabled {
+  background-color: #ccc;
+  color: #666;
+  cursor: not-allowed;
+}
+
+/* DARK MODE SUPPORT */
+body.dark-mode .cpu-container {
+  background-color: #1e1e1e;
+  color: white;
+  box-shadow: 0 2px 8px rgba(255, 255, 255, 0.05);
+}
+
+body.dark-mode .input-section input,
+body.dark-mode .input-section select,
+body.dark-mode .settings-section input,
+body.dark-mode .settings-section select {
+  background-color: #2a2a2a;
+  color: white;
+  border: 1px solid #555;
+}
+
+body.dark-mode .input-section button,
+body.dark-mode .settings-section button {
+  background-color: #3399ff;
+}
+
+body.dark-mode .input-section button:hover,
+body.dark-mode .settings-section button:hover {
+  background-color: #1e88e5;
+}
+
+body.dark-mode .process-table th {
+  background-color: #444;
+  color: white;
+}
+
+body.dark-mode .process-table td {
+  background-color: #2a2a2a;
+  color: white;
+  border: 1px solid #555;
+}
+
+body.dark-mode .process-table td button {
+  background-color: #cc4444;
+}
+
+body.dark-mode .process-table td button:hover {
+  background-color: #b22e2e;
+}
+
+body.dark-mode .step-entry {
+  background-color: #2a2a2a;
+  border: 1px solid #444;
+}
+
+body.dark-mode .gantt-block {
+  background-color: #3d85c6;
+}
+
+body.dark-mode .step-controls button {
+  background-color: #f57c00;
+  color: white;
+}
+
+body.dark-mode .step-controls button:hover {
+  background-color: #fb8c00;
+}
+
+body.dark-mode .step-controls button:disabled {
+  background-color: #444;
+  color: #888;
+}

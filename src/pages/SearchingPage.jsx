@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { binarySearch, linearSearch } from '../algorithms/searching';
+import '../styles/searchingpage.css';
 
 export default function SearchingPage() {
   const [array, setArray] = useState([1, 2, 4, 5, 7, 9]);
@@ -65,78 +66,61 @@ export default function SearchingPage() {
   const currentStep = result ? result.steps[stepIndex] : null;
 
   return (
-    <div style={{ padding: 20 }}>
+    <div className="searching-container">
       <h2>Searching Algorithms Visualizer</h2>
 
-      <div>
+      <div className="searching-controls">
         <label>
-          Algorithm:{' '}
+          Algorithm:
           <select value={algo} onChange={(e) => setAlgo(e.target.value)}>
             <option value="binary">Binary Search</option>
             <option value="linear">Linear Search</option>
           </select>
         </label>
-        <button onClick={generateRandomArray} style={{ marginLeft: 10 }}>
+        <button onClick={generateRandomArray}>
           New Random Array
         </button>
-        <button onClick={runSearch} style={{ marginLeft: 10 }}>
+        <button onClick={runSearch}>
           Run Search
         </button>
       </div>
 
-      <div style={{ marginTop: 10 }}>
+      <div className="searching-controls">
         <label>
-          Array (comma-separated):{' '}
+          Array (comma-separated):
           <input
             type="text"
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
-            style={{ width: 300 }}
           />
         </label>
-      </div>
 
-      <div style={{ marginTop: 10 }}>
         <label>
-          Target:{' '}
+          Target:
           <input
             type="number"
             value={target}
             onChange={(e) => setTarget(e.target.value)}
-            style={{ width: 80 }}
           />
         </label>
       </div>
 
-      {error && <p style={{ color: 'red' }}>{error}</p>}
+      {error && <p className="searching-error">{error}</p>}
 
-      <div style={{ marginTop: 20, display: 'flex', gap: 5, flexWrap: 'wrap' }}>
+      <div className="searching-bars">
         {array.map((val, idx) => {
-          let bgColor = 'teal';
+          let barClass = 'bar-box bar-normal';
           if (currentStep) {
             if (algo === 'binary') {
-              if (idx === currentStep.mid) bgColor = 'orange';
-              else if (idx >= currentStep.left && idx <= currentStep.right) bgColor = '#6fcf97';
-              else bgColor = '#ddd';
+              if (idx === currentStep.mid) barClass = 'bar-box bar-highlight';
+              else if (idx >= currentStep.left && idx <= currentStep.right) barClass = 'bar-box bar-secondary';
+              else barClass = 'bar-box bar-outside-range';
             } else if (algo === 'linear') {
-              if (idx === currentStep.checkingIndex) bgColor = 'orange';
+              if (idx === currentStep.checkingIndex) barClass = 'bar-box bar-highlight';
             }
           }
           return (
-            <div
-              key={idx}
-              style={{
-                width: 30,
-                height: 30,
-                backgroundColor: bgColor,
-                color: 'white',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontWeight: 'bold',
-                borderRadius: 4,
-              }}
-            >
+            <div key={idx} className={barClass}>
               {val}
             </div>
           );
@@ -144,8 +128,8 @@ export default function SearchingPage() {
       </div>
 
       {currentStep && (
-        <div style={{ marginTop: 10 }}>
-          <strong>Explanation:</strong>{' '}
+        <div className="searching-explanation">
+          Explanation:{' '}
           {algo === 'binary' ? (
             <>
               Checking middle index <strong>{currentStep.mid}</strong> (
@@ -162,16 +146,15 @@ export default function SearchingPage() {
         </div>
       )}
 
-
       {result && (
-        <div style={{ marginTop: 20 }}>
+        <div className="searching-result">
           <p>Algorithm: {result.algo}</p>
           <p>Found: {result.found ? 'Yes' : 'No'}</p>
           <p>Index: {result.index}</p>
           <p>Comparisons: {result.comparisons}</p>
           <p>Time Taken: {result.time} ms</p>
 
-          <div>
+          <div className="step-navigation">
             <button onClick={prevStep} disabled={stepIndex === 0}>
               Prev Step
             </button>

@@ -1,224 +1,197 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   fcfs,
   sjf,
   srtf,
-  roundRobin,
-  priorityScheduling,
+  rr,
+  priorityNonPreemptive,
   priorityPreemptive
 } from '../algorithms/cpuScheduling';
-import Chart from '../components/Chart';
+import '../styles/CpuPage.css';
 
 export default function CpuPage() {
   const [processes, setProcesses] = useState([
-    { pid: 'P1', arrival: 0, burst: 4, priority: 2 },
-    { pid: 'P2', arrival: 2, burst: 3, priority: 1 },
-    { pid: 'P3', arrival: 4, burst: 1, priority: 3 },
+    { pid: 'P1', arrival: 0, burst: 5, priority: 2 },
+    { pid: 'P2', arrival: 1, burst: 3, priority: 1 },
+    { pid: 'P3', arrival: 2, burst: 8, priority: 3 },
   ]);
 
-  const [newProcess, setNewProcess] = useState({ pid: '', arrival: '', burst: '', priority: '' });
-  const [gantt, setGantt] = useState([]);
-  const [selectedAlgo, setSelectedAlgo] = useState('fcfs');
+  const [pid, setPid] = useState('P4');
+  const [arrival, setArrival] = useState('');
+  const [burst, setBurst] = useState('');
+  const [priority, setPriority] = useState('');
+
+  const [algo, setAlgo] = useState('FCFS');
   const [quantum, setQuantum] = useState(2);
-  const [avgWaitingTime, setAvgWaitingTime] = useState(null);
-  const [avgTurnaroundTime, setAvgTurnaroundTime] = useState(null);
+
+  const [schedule, setSchedule] = useState([]);
+  const [steps, setSteps] = useState([]);
+  const [currentStep, setCurrentStep] = useState(0);
+  const [lastRunAlgo, setLastRunAlgo] = useState('');
+
+  const algoNames = {
+    FCFS: 'First-Come, First-Served',
+    SJF: 'Shortest Job First',
+    SRTF: 'Shortest Remaining Time First',
+    RR: 'Round Robin',
+    'Priority (Non-Preemptive)': 'Priority Scheduling (Non-Preemptive)',
+    'Priority (Preemptive)': 'Priority Scheduling (Preemptive)',
+  };
+
+  const isQuantumAlgo = algo === 'RR';
+
+  useEffect(() => {
+    setCurrentStep(0);
+  }, [steps]);
 
   const addProcess = () => {
-    const { pid, arrival, burst, priority } = newProcess;
     if (!pid || arrival === '' || burst === '' || priority === '') return;
-
-    setProcesses([...processes, {
+    const newProc = {
       pid,
-      arrival: parseInt(arrival),
-      burst: parseInt(burst),
-      priority: parseInt(priority)
-    }]);
+      arrival: parseInt(arrival, 10),
+      burst: parseInt(burst, 10),
+      priority: parseInt(priority, 10),
+    };
+    setProcesses(prev => [...prev, newProc]);
+    setPid(`P${processes.length + 2}`);
+    setArrival('');
+    setBurst('');
+    setPriority('');
+  };
 
-    setNewProcess({ pid: '', arrival: '', burst: '', priority: '' });
+  const removeProcess = (id) => {
+    setProcesses(prev => prev.filter(p => p.pid !== id));
   };
 
   const runScheduling = () => {
-    let schedule;
-    switch (selectedAlgo) {
-      case 'fcfs':
-        schedule = fcfs(processes);
-        break;
-      case 'sjf':
-        schedule = sjf(processes);
-        break;
-      case 'srtf':
-        schedule = srtf(processes);
-        break;
-      case 'rr':
-        schedule = roundRobin(processes, quantum);
-        break;
-      case 'priority':
-        schedule = priorityScheduling(processes);
-        break;
-      case 'priorityPreemptive':
-        schedule = priorityPreemptive(processes);
-        break;
-      default:
-        schedule = [];
+    const copy = JSON.parse(JSON.stringify(processes));
+    let result = { schedule: [], steps: [] };
+    switch (algo) {
+      case 'FCFS': result = fcfs(copy); break;
+      case 'SJF': result = sjf(copy); break;
+      case 'SRTF': result = srtf(copy); break;
+      case 'RR': result = rr(copy, quantum); break;
+      case 'Priority (Non-Preemptive)': result = priorityNonPreemptive(copy); break;
+      case 'Priority (Preemptive)': result = priorityPreemptive(copy); break;
     }
-
-    setGantt(schedule);
-
-    let totalWaitingTime = 0;
-    let totalTurnaroundTime = 0;
-
-    for (let p of processes) {
-      let executions = schedule.filter(s => s.pid === p.pid);
-      if (executions.length === 0) continue;
-
-      let startTime = executions[0].start;
-      let endTime = executions[executions.length - 1].end;
-
-      let turnaroundTime = endTime - p.arrival;
-      let waitingTime = turnaroundTime - p.burst;
-
-      totalWaitingTime += waitingTime;
-      totalTurnaroundTime += turnaroundTime;
-    }
-
-    setAvgWaitingTime((totalWaitingTime / processes.length).toFixed(2));
-    setAvgTurnaroundTime((totalTurnaroundTime / processes.length).toFixed(2));
+    setSchedule(result.schedule);
+    setSteps(result.steps);
+    setLastRunAlgo(algo);
   };
 
-  const clearProcesses = () => {
-    setProcesses([]);
-    setGantt([]);
-    setAvgWaitingTime(null);
-    setAvgTurnaroundTime(null);
-  };
+  const cs = steps[currentStep] || { time: '-', queue: [], running: '-' };
 
   return (
-    <div style={{ padding: 20 }}>
-      <h2>CPU Scheduling Algorithms</h2>
+    <div className="cpu-container">
+      <h2>CPU Scheduling Visualizer</h2>
 
-      <div>
-        <h3>Enter New Process</h3>
-        <input
-          type="text"
-          placeholder="PID"
-          value={newProcess.pid}
-          onChange={(e) => setNewProcess({ ...newProcess, pid: e.target.value })}
-        />
-        <input
-          type="number"
-          placeholder="Arrival Time"
-          value={newProcess.arrival}
-          onChange={(e) => setNewProcess({ ...newProcess, arrival: e.target.value })}
-        />
-        <input
-          type="number"
-          placeholder="Burst Time"
-          value={newProcess.burst}
-          onChange={(e) => setNewProcess({ ...newProcess, burst: e.target.value })}
-        />
-        <input
-          type="number"
-          placeholder="Priority"
-          value={newProcess.priority}
-          onChange={(e) => setNewProcess({ ...newProcess, priority: e.target.value })}
-        />
-        <button onClick={addProcess} style={{ marginLeft: 10 }}>Add Process</button>
-        <button onClick={clearProcesses} style={{ marginLeft: 10, color: 'red' }}>Clear All</button>
+      <div className="input-section">
+        <input placeholder="PID" value={pid} onChange={e => setPid(e.target.value)} />
+        <input type="number" placeholder="Arrival" value={arrival} onChange={e => setArrival(e.target.value)} />
+        <input type="number" placeholder="Burst" value={burst} onChange={e => setBurst(e.target.value)} />
+        <input type="number" placeholder="Priority" value={priority} onChange={e => setPriority(e.target.value)} />
+        <button onClick={addProcess}>Add Process</button>
       </div>
 
-      <div style={{ marginTop: 20 }}>
-        <h3>Processes</h3>
-        <table border="1" cellPadding="5" style={{ borderCollapse: 'collapse' }}>
+      <div className="process-table">
+        <table>
           <thead>
             <tr>
-              <th>Process ID</th>
+              <th>PID</th>
               <th>Arrival Time</th>
               <th>Burst Time</th>
               <th>Priority</th>
+              <th>Action</th>
             </tr>
           </thead>
           <tbody>
-            {processes.map((p, i) => (
-              <tr key={i}>
+            {processes.map(p => (
+              <tr key={p.pid}>
                 <td>{p.pid}</td>
                 <td>{p.arrival}</td>
                 <td>{p.burst}</td>
                 <td>{p.priority}</td>
+                <td><button onClick={() => removeProcess(p.pid)}>Remove</button></td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
 
-      <div style={{ marginTop: 20 }}>
-        <label>
-          Select Algorithm:{' '}
-          <select value={selectedAlgo} onChange={e => setSelectedAlgo(e.target.value)}>
-            <option value="fcfs">First-Come, First-Served (FCFS)</option>
-            <option value="sjf">Shortest Job First (SJF)</option>
-            <option value="srtf">Shortest Remaining Time First (SRTF)</option>
-            <option value="rr">Round Robin (RR)</option>
-            <option value="priority">Priority Scheduling (Non-preemptive)</option>
-            <option value="priorityPreemptive">Priority Scheduling (Preemptive)</option>
-          </select>
-        </label>
+      <div className="settings-section">
+        <select value={algo} onChange={e => setAlgo(e.target.value)}>
+          <option>FCFS</option>
+          <option>SJF</option>
+          <option>SRTF</option>
+          <option>RR</option>
+          <option>Priority (Non-Preemptive)</option>
+          <option>Priority (Preemptive)</option>
+        </select>
+
+        {isQuantumAlgo && (
+          <input
+            type="number"
+            value={quantum}
+            min="1"
+            onChange={e => setQuantum(parseInt(e.target.value, 10))}
+            placeholder="Quantum"
+          />
+        )}
+
+        <button onClick={runScheduling}>Run Algorithm</button>
       </div>
 
-      {selectedAlgo === 'rr' && (
-        <div style={{ marginTop: 10 }}>
-          <label>
-            Quantum (time slice):{' '}
-            <input
-              type="number"
-              min="1"
-              value={quantum}
-              onChange={e => setQuantum(Number(e.target.value))}
-            />
-          </label>
-        </div>
-      )}
-
-      <button onClick={runScheduling} style={{ marginTop: 20 }}>
-        Run {selectedAlgo.toUpperCase()} Scheduling
-      </button>
-
-      {gantt.length > 0 && (
+      {steps.length > 0 && (
         <>
-          <h3>Gantt Chart</h3>
-          <div style={{ display: 'flex', marginTop: 10, flexWrap: 'wrap' }}>
-            {gantt.map((p, i) => {
-              const width = (p.end - p.start) * 40;
-              return (
-                <div
-                  key={i + p.pid + p.start}
-                  style={{
-                    border: '1px solid black',
-                    width,
-                    textAlign: 'center',
-                    padding: '10px 5px',
-                    backgroundColor: '#6fa8dc',
-                    marginRight: 2,
-                    color: 'white',
-                    fontWeight: 'bold',
-                    position: 'relative',
-                    marginBottom: 5,
-                  }}
-                >
-                  {p.pid}
-                  <div style={{ position: 'absolute', top: '100%', left: 0, fontSize: 12 }}>
-                    {p.start}
-                  </div>
-                  <div style={{ position: 'absolute', top: '100%', right: 0, fontSize: 12 }}>
-                    {p.end}
-                  </div>
-                </div>
-              );
-            })}
+          <div className="gantt-chart">
+  <h3>Gantt Chart</h3>
+  <div className="gantt-bar">
+    {schedule.map((it, idx) => (
+      <div
+        key={idx}
+        className="gantt-column"
+        style={{ width: `${(it.end - it.start) * 30}px` }}
+      >
+        <div className="gantt-block">{it.pid}</div>
+      </div>
+    ))}
+  </div>
+  <div className="gantt-times">
+    {schedule.map((it, idx) => (
+      <div
+        key={idx}
+        className="gantt-time"
+        style={{ width: `${(it.end - it.start) * 30}px` }}
+      >
+        {it.start}
+      </div>
+    ))}
+    {/* Final end time aligned after last block */}
+    <div className="gantt-time">{schedule[schedule.length - 1].end}</div>
+  </div>
+</div>
+
+
+
+
+
+          <div className="steps-section">
+            <h3>Step-by-Step Execution</h3>
+            <p><strong>Time:</strong> {cs.time}, <strong>Running:</strong> {cs.running}, <strong>Queue:</strong> [{cs.queue.join(', ') || 'Empty'}]</p>
+
+            <div className="navigation-buttons">
+              <button onClick={() => setCurrentStep(prev => Math.max(prev - 1, 0))} disabled={currentStep === 0}>
+                Prev
+              </button>
+              <button onClick={() => setCurrentStep(prev => Math.min(prev + 1, steps.length - 1))} disabled={currentStep === steps.length - 1}>
+                Next
+              </button>
+            </div>
           </div>
 
-          <div style={{ marginTop: 20 }}>
-            <p>Average Waiting Time: {avgWaitingTime}</p>
-            <p>Average Turnaround Time: {avgTurnaroundTime}</p>
+          <div className="metrics">
+            <p><strong>Algorithm:</strong> {algoNames[lastRunAlgo]}</p>
+            <p><strong>Total Steps:</strong> {steps.length}</p>
           </div>
         </>
       )}

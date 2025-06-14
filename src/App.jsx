@@ -4,7 +4,7 @@ import NavBar from './components/NavBar';
 import HomePage from './pages/HomePage';
 import SortingPage from './pages/SortingPage';
 import SearchingPage from './pages/SearchingPage';
-import CPUPage from './pages/cpuPage';
+import CpuPage from './pages/cpuPage';
 import DiskPage from './pages/DiskPage';
 
 function App() {
@@ -15,7 +15,7 @@ function App() {
         <Route path="/" element={<HomePage />} />
         <Route path="/sorting" element={<SortingPage />} />
         <Route path="/searching" element={<SearchingPage />} />
-        <Route path="/cpu" element={<CPUPage />} />
+        <Route path="/cpu" element={<CpuPage />} />
         <Route path="/disk" element={<DiskPage />} />
       </Routes>
     </Router>

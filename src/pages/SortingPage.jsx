@@ -18,6 +18,18 @@ export default function SortingPage() {
   const [metrics, setMetrics] = useState({});
   const [algo, setAlgo] = useState('bubble');
   const [error, setError] = useState('');
+  const [lastRunAlgo, setLastRunAlgo] = useState('');
+
+
+  const algoNames = {
+  bubble: 'Bubble Sort',
+  selection: 'Selection Sort',
+  insertion: 'Insertion Sort',
+  quick: 'Quick Sort',
+  merge: 'Merge Sort',
+  heap: 'Heap Sort',
+};
+
 
   useEffect(() => {
     setCurrentStep(0);
@@ -88,6 +100,7 @@ export default function SortingPage() {
       const swaps = steps.filter(step => step.type === 'swap').length;
 
       setSteps(steps);
+      setLastRunAlgo(algo);
       setMetrics({
         comparisons,
         swaps,
@@ -118,109 +131,89 @@ export default function SortingPage() {
   const swapped = steps.length && steps[currentStep].type === 'swap' ? steps[currentStep].indices : [];
   const maxVal = Math.max(...currentArray);
   return (
-    <div style={{ padding: 20 }}>
-      <h2>Sorting Algorithms Visualizer</h2>
+  <div className="sorting-container">
+    <h2>Sorting Algorithms Visualizer</h2>
 
-      <div>
-        <label>
-          Algorithm:{' '}
-          <select value={algo} onChange={(e) => setAlgo(e.target.value)}>
-            <option value="bubble">Bubble Sort</option>
-            <option value="selection">Selection Sort</option>
-            <option value="insertion">Insertion Sort</option>
-            <option value="quick">Quick Sort</option>
-            <option value="merge">Merge Sort</option>
-            <option value="heap">Heap Sort</option>
-          </select>
-        </label>
-
-        <button onClick={generateRandomArray} style={{ marginLeft: 10 }}>
-          New Array
-        </button>
-      </div>
-
-      <div style={{ marginTop: 10 }}>
-        <label>Enter array (comma-separated): </label>
-        <input
-          type="text"
-          value={userInput}
-          onChange={handleInputChange}
-          placeholder="e.g. 5,2,9,1,7"
-          style={{ width: 200, marginRight: 10 }}
-        />
-        <button onClick={runSort}>Run Sort</button>
-      </div>
-
-      {error && <p style={{ color: 'red' }}>{error}</p>}
-
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'end',
-          height: 150,
-          marginTop: 20,
-          gap: '5px',
-          border: '1px solid #ccc',
-          padding: 10,
-        }}
-      >
-        {currentArray.map((val, idx) => {
-          const isComparing = comparing.includes(idx);
-          const isSwapped = swapped.includes(idx);
-          const height = (val / maxVal) * 140 + 10;
-          return (
-            <div
-              key={idx}
-              style={{
-                height: height,
-                width: 30,
-                backgroundColor: isSwapped ? 'red' : isComparing ? 'orange' : 'teal',
-                color: 'white',
-                display: 'flex',
-                alignItems: 'flex-end',
-                justifyContent: 'center',
-                fontWeight: 'bold',
-                fontSize: 14,
-                borderRadius: 4,
-              }}
-            >
-              {val}
-            </div>
-          );
-        })}
-      </div>
-
-      <div style={{ marginTop: 10 }}>
-        {steps.length > 0 && (
-          <p>
-            Step {currentStep + 1}/{steps.length}:{' '}
-            {steps[currentStep].type === 'compare' &&
-              `Comparing indices ${steps[currentStep].indices[0]} (${currentArray[steps[currentStep].indices[0]]}) and ${steps[currentStep].indices[1]} (${currentArray[steps[currentStep].indices[1]]})`}
-            {steps[currentStep].type === 'swap' &&
-              `Swapping indices ${steps[currentStep].indices[0]} and ${steps[currentStep].indices[1]}`}
-          </p>
-        )}
-      </div>
-
-
-      <div style={{ marginTop: 15 }}>
-        <button onClick={prevStep} disabled={currentStep === 0}>
-          Prev Step
-        </button>
-        <button
-          onClick={nextStep}
-          disabled={currentStep >= steps.length - 1 || steps.length === 0}
-          style={{ marginLeft: 10 }}
-        >
-          Next Step
-        </button>
-      </div>
-
-      <div style={{ marginTop: 20 }}>
-        <p>Comparisons: {metrics.comparisons || 0}</p>
-        <p>Swaps: {metrics.swaps || 0}</p>
-        <p>Time Taken: {metrics.time || 0} ms</p>
-      </div>
+    <div className="sorting-controls">
+      <label>
+        Algorithm:
+        <select value={algo} onChange={(e) => setAlgo(e.target.value)}>
+          <option value="bubble">Bubble Sort</option>
+          <option value="selection">Selection Sort</option>
+          <option value="insertion">Insertion Sort</option>
+          <option value="quick">Quick Sort</option>
+          <option value="merge">Merge Sort</option>
+          <option value="heap">Heap Sort</option>
+        </select>
+      </label>
+      <button onClick={generateRandomArray}>New Array</button>
     </div>
-  );
+
+    <div className="sorting-controls">
+      <label>Enter array (comma-separated):</label>
+      <input
+        type="text"
+        value={userInput}
+        onChange={handleInputChange}
+        placeholder="e.g. 5,2,9,1,7"
+      />
+      <button onClick={runSort}>Run Sort</button>
+    </div>
+
+    {error && <p className="error-message">{error}</p>}
+
+    <div className="bar-visualization">
+      {currentArray.map((val, idx) => {
+        const className = swapped.includes(idx)
+          ? 'bar swap'
+          : comparing.includes(idx)
+          ? 'bar compare'
+          : 'bar normal';
+        const height = (val / maxVal) * 140 + 10;
+        return (
+          <div key={idx} className={className} style={{ height }}>
+            {val}
+          </div>
+        );
+      })}
+    </div>
+
+    <div className="step-description">
+      {steps.length > 0 && (
+        <p>
+          Step {currentStep + 1}/{steps.length}:{' '}
+          {steps[currentStep].type === 'compare' &&
+            `Comparing indices ${steps[currentStep].indices[0]} (${currentArray[steps[currentStep].indices[0]]}) and ${steps[currentStep].indices[1]} (${currentArray[steps[currentStep].indices[1]]})`}
+          {steps[currentStep].type === 'swap' &&
+            `Swapping indices ${steps[currentStep].indices[0]} and ${steps[currentStep].indices[1]}`}
+        </p>
+      )}
+    </div>
+
+    {steps.length > 0 && (
+      <>
+        <div className="navigation-buttons">
+          <button onClick={prevStep} disabled={currentStep === 0}>
+            Prev Step
+          </button>
+          <button
+            onClick={nextStep}
+            disabled={currentStep >= steps.length - 1}
+          >
+            Next Step
+          </button>
+        </div>
+
+        <div className="metrics">
+          <p>Algorithm: {algoNames[lastRunAlgo]}</p>
+          <p>Comparisons: {metrics.comparisons}</p>
+          <p>Swaps: {metrics.swaps}</p>
+          <p>Time Taken: {metrics.time} ms</p>
+        </div>
+      </>
+    )}
+
+  </div>
+);
+
 }

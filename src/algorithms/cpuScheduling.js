@@ -1,198 +1,220 @@
-// src/algorithms/cpuScheduling.js
+// cpuScheduling.js
 
-// First-Come, First-Served (FCFS)
+function recordIdle(schedule, steps, currentTime, nextTime) {
+  if (currentTime < nextTime) {
+    schedule.push({ pid: 'Idle', start: currentTime, end: nextTime });
+    for (let t = currentTime; t < nextTime; t++) {
+      steps.push({ time: t, queue: [], running: null });
+    }
+  }
+}
+
+// FCFS
 export function fcfs(processes) {
   processes.sort((a, b) => a.arrival - b.arrival);
-  let currentTime = 0;
-  let schedule = [];
+  let currentTime = 0, schedule = [], steps = [];
 
   for (let p of processes) {
-    let start = Math.max(currentTime, p.arrival);
+    if (p.arrival > currentTime) {
+      recordIdle(schedule, steps, currentTime, p.arrival);
+      currentTime = p.arrival;
+    }
+    let start = currentTime;
     let end = start + p.burst;
     schedule.push({ pid: p.pid, start, end });
+
+    for (let t = start; t < end; t++) {
+      let queue = processes.filter(pr => pr.arrival <= t && pr.pid !== p.pid).map(pr => pr.pid);
+      steps.push({ time: t, queue, running: p.pid });
+    }
     currentTime = end;
   }
-  return schedule;
+
+  return { schedule, steps };
 }
 
-// Shortest Job First (SJF) - Non-preemptive
+// SJF
 export function sjf(processes) {
-  let proc = processes.map(p => ({ ...p }));
-  let currentTime = 0;
-  let schedule = [];
-  let completed = new Set();
+  let currentTime = 0, schedule = [], steps = [], completed = new Set();
 
-  while (completed.size < proc.length) {
-    // Pick process with shortest burst time among arrived & not completed
-    let available = proc.filter(p => p.arrival <= currentTime && !completed.has(p.pid));
+  while (completed.size < processes.length) {
+    let available = processes
+      .filter(p => p.arrival <= currentTime && !completed.has(p.pid))
+      .sort((a, b) => a.burst - b.burst || a.arrival - b.arrival);
+
     if (available.length === 0) {
-      // If none arrived, advance time
+      steps.push({ time: currentTime, queue: [], running: null });
       currentTime++;
       continue;
     }
-    available.sort((a, b) => a.burst - b.burst);
-    let currentProc = available[0];
+
+    let p = available[0];
     let start = currentTime;
-    let end = start + currentProc.burst;
-    schedule.push({ pid: currentProc.pid, start, end });
+    let end = start + p.burst;
+    schedule.push({ pid: p.pid, start, end });
+
+    for (let t = start; t < end; t++) {
+      let queue = processes.filter(pr => pr.arrival <= t && !completed.has(pr.pid) && pr.pid !== p.pid).map(pr => pr.pid);
+      steps.push({ time: t, queue, running: p.pid });
+    }
+
     currentTime = end;
-    completed.add(currentProc.pid);
+    completed.add(p.pid);
   }
-  return schedule;
+
+  return { schedule, steps };
 }
 
-// Round Robin (RR)
-// quantum: time slice for each process
-export function roundRobin(processes, quantum) {
-  let proc = processes.map(p => ({
-    pid: p.pid,
-    arrival: p.arrival,
-    burst: p.burst,
-    remaining: p.burst,
-  }));
-  let currentTime = 0;
-  let schedule = [];
-  let queue = [];
-  let completed = new Set();
+// SRTF
+export function srtf(processes) {
+  let currentTime = 0, remaining = {}, schedule = [], steps = [], lastPid = null;
+  let completed = 0, n = processes.length;
 
-  // Sort by arrival initially
-  proc.sort((a, b) => a.arrival - b.arrival);
+  processes.forEach(p => remaining[p.pid] = p.burst);
 
-  while (completed.size < proc.length) {
-    // Add newly arrived processes to queue
-    proc.forEach(p => {
-      if (p.arrival <= currentTime && !queue.includes(p) && !completed.has(p.pid) && !queue.some(q => q.pid === p.pid)) {
+  while (completed < n) {
+    let available = processes
+      .filter(p => p.arrival <= currentTime && remaining[p.pid] > 0)
+      .sort((a, b) => remaining[a.pid] - remaining[b.pid] || a.arrival - b.arrival);
+
+    if (available.length === 0) {
+      steps.push({ time: currentTime, queue: [], running: null });
+      currentTime++;
+      continue;
+    }
+
+    let p = available[0];
+    if (lastPid !== p.pid) {
+      schedule.push({ pid: p.pid, start: currentTime, end: currentTime + 1 });
+    } else {
+      schedule[schedule.length - 1].end++;
+    }
+
+    remaining[p.pid]--;
+    if (remaining[p.pid] === 0) completed++;
+
+    let queue = available.filter(pr => pr.pid !== p.pid).map(pr => pr.pid);
+    steps.push({ time: currentTime, queue, running: p.pid });
+
+    lastPid = p.pid;
+    currentTime++;
+  }
+
+  return { schedule, steps };
+}
+
+// Round Robin
+export function rr(processes, quantum = 2) {
+  let currentTime = 0, schedule = [], steps = [], queue = [];
+  let remaining = {}, visited = new Set();
+
+  processes.forEach(p => remaining[p.pid] = p.burst);
+
+  while (queue.length > 0 || processes.some(p => p.arrival <= currentTime && remaining[p.pid] > 0)) {
+    for (let p of processes) {
+      if (p.arrival <= currentTime && !visited.has(p.pid)) {
         queue.push(p);
+        visited.add(p.pid);
       }
-    });
+    }
 
     if (queue.length === 0) {
+      steps.push({ time: currentTime, queue: [], running: null });
       currentTime++;
       continue;
     }
 
-    let currentProc = queue.shift();
-    let execTime = Math.min(quantum, currentProc.remaining);
-    let start = currentTime;
-    let end = start + execTime;
+    let p = queue.shift();
+    let timeSlice = Math.min(quantum, remaining[p.pid]);
+    schedule.push({ pid: p.pid, start: currentTime, end: currentTime + timeSlice });
 
-    schedule.push({ pid: currentProc.pid, start, end });
+    for (let t = 0; t < timeSlice; t++) {
+      let q = queue.map(pr => pr.pid);
+      steps.push({ time: currentTime, queue: q, running: p.pid });
+      currentTime++;
+    }
 
-    currentProc.remaining -= execTime;
-    currentTime = end;
+    remaining[p.pid] -= timeSlice;
 
-    // Add newly arrived processes during this quantum
-    proc.forEach(p => {
-      if (p.arrival > start && p.arrival <= currentTime && !queue.includes(p) && !completed.has(p.pid)) {
-        queue.push(p);
+    for (let pr of processes) {
+      if (pr.arrival <= currentTime && !visited.has(pr.pid)) {
+        queue.push(pr);
+        visited.add(pr.pid);
       }
-    });
-
-    if (currentProc.remaining > 0) {
-      queue.push(currentProc);
-    } else {
-      completed.add(currentProc.pid);
     }
+
+    if (remaining[p.pid] > 0) queue.push(p);
   }
 
-  return schedule;
+  return { schedule, steps };
 }
 
-// Priority Scheduling (Non-preemptive)
-// Assumes each process has a 'priority' property (lower number = higher priority)
-export function priorityScheduling(processes) {
-  let proc = processes.map(p => ({ ...p }));
-  let currentTime = 0;
-  let schedule = [];
-  let completed = new Set();
+// Priority (Non-preemptive)
+export function priorityNonPreemptive(processes) {
+  let currentTime = 0, schedule = [], steps = [], completed = new Set();
 
-  while (completed.size < proc.length) {
-    // Pick highest priority among arrived & not completed
-    let available = proc.filter(p => p.arrival <= currentTime && !completed.has(p.pid));
+  while (completed.size < processes.length) {
+    let available = processes
+      .filter(p => p.arrival <= currentTime && !completed.has(p.pid))
+      .sort((a, b) => a.priority - b.priority || a.arrival - b.arrival);
+
     if (available.length === 0) {
+      steps.push({ time: currentTime, queue: [], running: null });
       currentTime++;
       continue;
     }
-    available.sort((a, b) => a.priority - b.priority);
-    let currentProc = available[0];
+
+    let p = available[0];
     let start = currentTime;
-    let end = start + currentProc.burst;
-    schedule.push({ pid: currentProc.pid, start, end });
+    let end = start + p.burst;
+    schedule.push({ pid: p.pid, start, end });
+
+    for (let t = start; t < end; t++) {
+      let queue = processes.filter(pr => pr.arrival <= t && pr.pid !== p.pid && !completed.has(pr.pid)).map(pr => pr.pid);
+      steps.push({ time: t, queue, running: p.pid });
+    }
+
     currentTime = end;
-    completed.add(currentProc.pid);
+    completed.add(p.pid);
   }
 
-  return schedule;
+  return { schedule, steps };
 }
 
-// Shortest Remaining Time First (SRTF) - Preemptive SJF
-export function srtf(processes) {
-  let proc = processes.map(p => ({ ...p, remaining: p.burst }));
-  let currentTime = 0;
-  let schedule = [];
-  let completed = new Set();
-  let lastPid = null;
-
-  while (completed.size < proc.length) {
-    // Get all arrived and not completed processes
-    let available = proc.filter(p => p.arrival <= currentTime && !completed.has(p.pid));
-    if (available.length === 0) {
-      currentTime++;
-      continue;
-    }
-
-    // Choose process with shortest remaining time
-    available.sort((a, b) => a.remaining - b.remaining);
-    let currentProc = available[0];
-
-    // Record a new execution slice if a different process is scheduled
-    if (lastPid !== currentProc.pid) {
-      schedule.push({ pid: currentProc.pid, start: currentTime, end: currentTime + 1 });
-    } else {
-      schedule[schedule.length - 1].end++;
-    }
-
-    currentProc.remaining--;
-    if (currentProc.remaining === 0) completed.add(currentProc.pid);
-
-    lastPid = currentProc.pid;
-    currentTime++;
-  }
-
-  return schedule;
-}
-
-// Priority Scheduling (Preemptive)
+// Priority (Preemptive)
 export function priorityPreemptive(processes) {
-  let proc = processes.map(p => ({ ...p, remaining: p.burst }));
-  let currentTime = 0;
-  let schedule = [];
-  let completed = new Set();
-  let lastPid = null;
+  let currentTime = 0, schedule = [], steps = [], remaining = {};
+  let completed = 0, lastPid = null, n = processes.length;
 
-  while (completed.size < proc.length) {
-    let available = proc.filter(p => p.arrival <= currentTime && !completed.has(p.pid));
+  processes.forEach(p => remaining[p.pid] = p.burst);
+
+  while (completed < n) {
+    let available = processes
+      .filter(p => p.arrival <= currentTime && remaining[p.pid] > 0)
+      .sort((a, b) => a.priority - b.priority || a.arrival - b.arrival);
+
     if (available.length === 0) {
+      steps.push({ time: currentTime, queue: [], running: null });
       currentTime++;
       continue;
     }
 
-    // Choose highest priority (lowest number)
-    available.sort((a, b) => a.priority - b.priority);
-    let currentProc = available[0];
-
-    if (lastPid !== currentProc.pid) {
-      schedule.push({ pid: currentProc.pid, start: currentTime, end: currentTime + 1 });
+    let p = available[0];
+    if (lastPid !== p.pid) {
+      schedule.push({ pid: p.pid, start: currentTime, end: currentTime + 1 });
     } else {
       schedule[schedule.length - 1].end++;
     }
 
-    currentProc.remaining--;
-    if (currentProc.remaining === 0) completed.add(currentProc.pid);
+    remaining[p.pid]--;
+    if (remaining[p.pid] === 0) completed++;
 
-    lastPid = currentProc.pid;
+    let queue = available.filter(pr => pr.pid !== p.pid).map(pr => pr.pid);
+    steps.push({ time: currentTime, queue, running: p.pid });
+
+    lastPid = p.pid;
     currentTime++;
   }
 
-  return schedule;
+  return { schedule, steps };
 }
